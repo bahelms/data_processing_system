@@ -14,7 +14,7 @@ defmodule DPS.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :yaml_elixir],
      mod: {DPS, []}]
   end
 
@@ -28,6 +28,8 @@ defmodule DPS.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:poison, "2.1.0"},
+     {:yaml_elixir, "1.2.0"},
+     {:yamerl, github: "yakaz/yamerl"}]
   end
 end
