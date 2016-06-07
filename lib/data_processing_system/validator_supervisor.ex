@@ -1,4 +1,4 @@
-defmodule DPS.WorkerSupervisor do
+defmodule DPS.ValidatorSupervisor do
   use Supervisor
 
   @worker_count 100
@@ -9,7 +9,7 @@ defmodule DPS.WorkerSupervisor do
 
   def init([]) do
     children = for num <- 0..@worker_count do
-      worker(DPS.Worker, [], id: num)
+      worker(DPS.Validator, [num], id: num)
     end
 
     supervise(children, strategy: :one_for_one)

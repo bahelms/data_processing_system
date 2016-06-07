@@ -1,3 +1,7 @@
-ivmast: ivmast_topic
-sycgroup: sycgroup_topic
+ivmast: 
+  topic: ivmast
+sycgroup: 
+  topic: sycgroup
+sycclass: 
+  topic: sycclass
 

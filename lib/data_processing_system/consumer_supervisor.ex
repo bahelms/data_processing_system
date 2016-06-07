@@ -8,8 +8,8 @@ defmodule DPS.ConsumerSupervisor do
   end
 
   def init([]) do
-    children = for {{table, topic}, index} <- config do
-      worker(DPS.Consumer, [topic], id: index)
+    children = for {{_table, options}, index} <- config do
+      worker(DPS.Consumer, [options["topic"]], id: index)
     end
 
     supervise(children, strategy: :one_for_one)

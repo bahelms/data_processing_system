@@ -1,0 +1,7 @@
+sycclass:
+  references:
+    sycgroup: [scclgp, record_catalog]
+
+sycgroup:
+  references: null
+

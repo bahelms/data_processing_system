@@ -6,7 +6,7 @@ defmodule DPS do
 
     children = [
       supervisor(DPS.ConsumerSupervisor, []),
-      supervisor(DPS.WorkerSupervisor, [])
+      # supervisor(DPS.WorkerSupervisor, [])
     ]
 
     opts = [strategy: :one_for_one, name: DPS.Supervisor]
