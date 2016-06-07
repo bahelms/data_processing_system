@@ -23,7 +23,7 @@ defmodule DPS.Validator do
   end
 
   def handle_call({:validate, data}, _from, state) do
-    generate_keys(data, state.config)
+    generate_keys(data, state.config[data["table"]["references"]])
 
     # retrieve keys
     # if valid?
@@ -34,14 +34,13 @@ defmodule DPS.Validator do
     {:reply, :ok, state}
   end
 
-  def generate_keys(data, config) do
-    config[data["table"]]["references"]
-    |> Enum.map(fn
-      {table, fields} ->
-        fields
-        |> Enum.map(fn(field) -> data[field] end)
-        |> Enum.join(":")
-      nil -> nil
-    end)
+  def generate_keys(_data, nil), do: nil
+
+  @spec generate_keys(map, map) :: String.t
+  def generate_keys(data, references) do
+    Enum.map references, fn({table, fields}) ->
+      [table | Enum.map(fields, fn(field) -> data[field] end)]
+      |> Enum.join(":")
+    end
   end
 end

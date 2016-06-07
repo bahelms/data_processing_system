@@ -12,12 +12,25 @@ defmodule DPS.ValidatorTest do
       "sccscl" => "123",
       "scclgp" => "02",
       "record_catalog" => "ABC"
-    } |> DPS.Validator.generate_keys(config)
+    } |> DPS.Validator.generate_keys(config["sycclass"]["references"])
     assert keys == ["sycgroup:02:ABC"]
   end
 
-  test "nil is returned when a table has no dependencies", %{config: config} do
-    keys = DPS.Validator.generate_keys(%{"table" => "sycgroup"}, config)
-    assert keys == nil
+  test "keys are generated with arbitrary references" do
+    references =
+      %{"some_table" => ["cajun_filet", "tea"],
+        "another_table" => ["boberry", "coffee"]}
+    keys = %{
+      "table" => "bojangle",
+      "cajun_filet" => 3,
+      "boberry" => "biscuit",
+      "tea" => "sweet",
+      "coffee" => "black"
+    } |> DPS.Validator.generate_keys(references)
+    assert keys = ["some_table:3:sweet", "another_table:biscuit:black"]
+  end
+
+  test "nil is returned when a table has no dependencies" do
+    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil) == nil
   end
 end
