@@ -6,8 +6,9 @@ defmodule DPS.Validator do
 
   ## Client ##
 
-  def start_link do
-    GenServer.start_link(__MODULE__, [])
+  @spec start_link(reference) :: {:ok, pid}
+  def start_link(cache) do
+    GenServer.start_link(__MODULE__, cache)
   end
 
   @doc """
@@ -23,21 +24,26 @@ defmodule DPS.Validator do
 
   ## Server ##
 
-  def init([]) do
-    state = %{config: YamlElixir.read_from_file(@validator_config)}
+  def init(cache) do
+    state =
+      %{config: YamlElixir.read_from_file(@validator_config),
+        cache:  cache}
     {:ok, state}
   end
 
   def handle_call({:validate, data}, _from, state) do
-    generate_keys(data, state.config[data["table"]]["references"])
+    data
+    |> generate_keys(state.config[data["table"]]["references"])
+    |> retrieve_keys(state.cache)
+    |> inspect
+    |> Logger.info
 
-    # retrieve keys
     # if valid?
     #   send data to transformer
     # else
     #   generate response
     #   send to response topic
-    {:reply, :ok, state}
+    {:reply, nil, state}
   end
 
   @doc """
@@ -46,12 +52,17 @@ defmodule DPS.Validator do
   The values after the table_name represent the primary key of records to retrieve.
   Ex: "ivmast:H837:ABC"
   """
-  @spec generate_keys(map, map | nil) :: String.t | nil
-  def generate_keys(_data, nil), do: nil
+  @spec generate_keys(map, map | nil) :: [String.t] | []
+  def generate_keys(_data, nil), do: []
   def generate_keys(data, references) do
     Enum.map references, fn({table, fields}) ->
       [table | Enum.map(fields, fn(field) -> data[field] end)]
       |> Enum.join(":")
     end
+  end
+
+  @spec retrieve_keys([String.t] | [], reference) :: [tuple]
+  def retrieve_keys(keys, cache) do
+    DPS.ValidationCache.get(cache, keys)
   end
 end

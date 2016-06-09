@@ -1,6 +1,6 @@
 defmodule DPS.ValidationCache do
   @moduledoc """
-  This module manages a GenServer that contains a map of key/value pairs.
+  This module manages an ETS table that contains a key/value pairs.
   Each key corresponds to a record that has already been successfully processed.
   The value of those keys is that record's timestamp.
 
@@ -8,48 +8,33 @@ defmodule DPS.ValidationCache do
   The values after the table name represent the primary key of that record.
   Ex: "ivmast:H837:ABC"
   """
-  use GenServer
 
-  ## Client ##
-
-  def start_link do
-    GenServer.start_link(__MODULE__, %{})
+  @doc """
+  Returns a reference to a new ETS table of the given name.
+  """
+  @spec new_table(atom) :: reference
+  def new_table(name) do
+    :ets.new(name, [:public])
   end
 
   @doc """
-  Inserts either one tuple or a list of tuples into the state
+  Inserts either one tuple or a list of tuples into the cache table.
   """
-  @spec set(pid, [tuple, ...] | tuple) :: :ok | integer
-  def set(pid, entries) do
-    GenServer.call(pid, {:set, entries})
+  @spec set(reference, tuple | [tuple]) :: true
+  def set(cache, entries) do
+    :ets.insert(cache, entries)
   end
 
   @doc """
-  Retrieves either one value for a given key or a list of values for a list
-  of keys.
+  Retrieves a list of key/value tuples corresponding to the given keys
   """
-  @spec get(pid, [String.t, ...] | String.t) :: [String.t, ...] | String.t
-  def get(pid, keys) do
-    GenServer.call(pid, {:get, keys})
-  end
-
-  ## Server ##
-
-  def handle_call({:set, {key, value}}, _from, state) do
-    {:reply, :ok, Map.put(state, key, value)}
-  end
-
-  def handle_call({:set, entries}, _from, state) do
-    state = Map.merge(state, Enum.into(entries, %{}))
-    {:reply, length(entries), state}
-  end
-
-  def handle_call({:get, keys}, _from, state) when is_list(keys) do
-    values = state |> Map.take(keys) |> Map.values
-    {:reply, values, state}
-  end
-
-  def handle_call({:get, key}, _from, state) do
-    {:reply, Map.get(state, key), state}
+  @spec get(reference, [String.t]) :: [tuple]
+  def get(cache, keys) when is_list(keys) do
+    Enum.map keys, fn(key) ->
+      case :ets.lookup(cache, key) do
+        [tuple] -> tuple
+        []      -> nil
+      end
+    end
   end
 end

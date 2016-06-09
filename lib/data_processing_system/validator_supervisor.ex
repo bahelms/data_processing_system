@@ -7,9 +7,12 @@ defmodule DPS.ValidatorSupervisor do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
+  @doc """
+  Creates many validator workers and checks them into a pool.
+  """
   def init([]) do
     children = for num <- 0..@worker_count do
-      worker(DPS.Validator, [num], id: num)
+      worker(DPS.Validator, [], id: num)
     end
 
     supervise(children, strategy: :one_for_one)

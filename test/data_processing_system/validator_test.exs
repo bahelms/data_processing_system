@@ -9,7 +9,8 @@ defmodule DPS.ValidatorTest do
         "sccscl"         => "123",
         "scclgp"         => "02",
         "record_catalog" => "ABC"
-      }
+      },
+      cache: DPS.ValidationCache.new_table(:cache)
     }
     {:ok, context}
   end
@@ -37,17 +38,27 @@ defmodule DPS.ValidatorTest do
     assert keys == ["another_table:biscuit:black", "some_table:3:sweet"]
   end
 
-  test "nil is returned when a table has no dependencies" do
-    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil) == nil
+  test "an empty list is returned when a table has no dependencies" do
+    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil) == []
   end
 
-  test ":ok is returned when all dependencies exist", %{sample_data: data} do
-    {:ok, pid} = DPS.Validator.start_link
-    assert DPS.Validator.process(pid, data) == :ok
+  test "retrieving keys returns a list of tuples", context do
+    DPS.ValidationCache.set(context.cache, [{"sycgroup:123:ABC", :value}])
+    result =
+      DPS.Validator.retrieve_keys(["sycgroup:123:ABC", :bad_key], context.cache)
+    assert result == [{"sycgroup:123:ABC", :value}, nil]
   end
 
-  test ":error is returned when the message is invalid", %{sample_data: data} do
-    {:ok, pid} = DPS.Validator.start_link
-    assert DPS.Validator.process(pid, data) == :error
+  ## process/2 - validation acceptance ##
+
+  test ":ok is returned when all dependencies exist", context do
+    DPS.ValidationCache.set(context.cache, [{"sycgroup:02:ABC", :os.timestamp}])
+    {:ok, pid} = DPS.Validator.start_link(context.cache)
+    assert DPS.Validator.process(pid, context.sample_data) == :ok
+  end
+
+  test ":error is returned when the message is invalid", context do
+    {:ok, pid} = DPS.Validator.start_link(context.cache)
+    assert DPS.Validator.process(pid, context.sample_data) == :error
   end
 end
