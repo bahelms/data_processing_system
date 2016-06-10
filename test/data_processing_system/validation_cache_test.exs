@@ -22,4 +22,8 @@ defmodule DPS.ValidationCacheTest do
     assert Cache.get(cache, [:key1, :key2]) == [key1: :value1, key2: :value2]
     assert Cache.get(cache, ["no_key1", "no_key2"]) == [nil, nil]
   end
+
+  test "retrieving keys returns an empty list when given an empty list", context do
+    assert Cache.get(context.cache, []) == []
+  end
 end

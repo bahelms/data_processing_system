@@ -28,8 +28,8 @@ defmodule DPS.ValidationCache do
   @doc """
   Retrieves a list of key/value tuples corresponding to the given keys
   """
-  @spec get(reference, [String.t]) :: [tuple]
-  def get(cache, keys) when is_list(keys) do
+  @spec get(reference, [String.t] | []) :: [tuple] | []
+  def get(cache, keys) do
     Enum.map keys, fn(key) ->
       case :ets.lookup(cache, key) do
         [tuple] -> tuple

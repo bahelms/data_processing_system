@@ -15,14 +15,18 @@ defmodule DPS.ValidatorTest do
     {:ok, context}
   end
 
-  test "keys are generated when a table has dependencies", context do
+  test "keys are generated when a table has references", context do
     keys =
       context.sample_data
       |> DPS.Validator.generate_keys(context.config["sycclass"]["references"])
     assert keys == ["sycgroup:02:ABC"]
   end
 
-  test "keys are generated with arbitrary references" do
+  test "generating keys with no references returns an empty list" do
+    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil) == []
+  end
+
+  test "keys can be generated with arbitrary references" do
     references =
       %{"some_table"    => ["cajun_filet", "tea"],
         "another_table" => ["boberry", "coffee"]}
@@ -37,15 +41,27 @@ defmodule DPS.ValidatorTest do
     assert keys == ["another_table:biscuit:black", "some_table:3:sweet"]
   end
 
-  test "an empty list is returned when a table has no dependencies" do
-    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil) == []
-  end
-
   test "retrieving keys returns a list of tuples", context do
     DPS.ValidationCache.set(context.cache, [{"sycgroup:123:ABC", :value}])
     result =
       DPS.Validator.retrieve_keys(["sycgroup:123:ABC", :bad_key], context.cache)
     assert result == [{"sycgroup:123:ABC", :value}, nil]
+  end
+
+  @tag :pending
+  test "validating keys" do
+  end
+
+  @tag :pending
+  test "check_key" do
+  end
+
+  @tag :pending
+  test "query_db" do
+  end
+
+  @tag :pending
+  test "update_cache" do
   end
 
   ## process/2 - validation acceptance ##

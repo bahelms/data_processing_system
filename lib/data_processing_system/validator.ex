@@ -36,37 +36,17 @@ defmodule DPS.Validator do
       data
       |> generate_keys(state.config[data["table"]]["references"])
       |> retrieve_keys(state.cache)
-      |> Enum.find(fn(kv_pair) -> validate_key(kv_pair) == :error end)
+      |> validate_keys
 
     case result do
-      nil ->
+      :valid ->
         # send_to_transformer(data)
         {:reply, :ok, state}
-      _   ->
+      _ ->
+        # return response code also
         {:reply, :error, state}
     end
-
-    # Enum.map keys, fn(key, value) ->
-    #   if value == nil do
-    #     if record = sql_query(key) do
-    #       update_cache(key, record.timestamp)
-    #       key,value
-    #     else
-    #       :invalid
-    #     end
-    #   else
-    #     key,value
-    #   end
-    # end
   end
-
-  def validate_key({key, nil}) do
-    case check_db(key) do
-      nil    -> :error
-      record -> update_cache(key, record.timestamp)
-    end
-  end
-  def validate_key(tuple), do: tuple
 
   @doc """
   Generates a list of strings used to query the validation cache.
@@ -83,8 +63,32 @@ defmodule DPS.Validator do
     end
   end
 
-  @spec retrieve_keys([String.t] | [], reference) :: [tuple]
+  @spec retrieve_keys([String.t] | [], reference) :: [tuple] | []
   def retrieve_keys(keys, cache) do
     DPS.ValidationCache.get(cache, keys)
+  end
+
+  @spec validate_keys([tuple] | []) :: tuple | :valid
+  def validate_keys(keys) do
+    Enum.find keys, :valid, fn(key) ->
+      check_key(key) == :error
+    end
+  end
+
+  @spec check_key(tuple) :: :error | :valid
+  def check_key({key, nil}) do
+    case query_db(key) do
+      nil    -> :error
+      record ->
+        update_cache(key, record.timestamp)
+        :valid
+    end
+  end
+  def check_key(_tuple), do: :valid
+
+  def query_db(key) do
+  end
+
+  def update_cache(key, timestamp) do
   end
 end
