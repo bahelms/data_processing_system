@@ -33,7 +33,7 @@ defmodule DPS.ValidationCache do
     Enum.map keys, fn(key) ->
       case :ets.lookup(cache, key) do
         [tuple] -> tuple
-        []      -> nil
+        []      -> {key, nil}
       end
     end
   end

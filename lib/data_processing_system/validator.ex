@@ -36,7 +36,7 @@ defmodule DPS.Validator do
       data
       |> generate_keys(state.config[data["table"]]["references"])
       |> retrieve_keys(state.cache)
-      |> validate_keys
+      |> validate_keys(state.cache)
 
     case result do
       :valid ->
@@ -50,8 +50,8 @@ defmodule DPS.Validator do
 
   @doc """
   Generates a list of strings used to query the validation cache.
-  The keys the following convention: "table_name:value1:value2:..."
-  The values after the table_name represent the primary key of records to retrieve.
+  The keys use the following convention: "table_name:value1:value2:..."
+  The values after the table_name represent the primary key of referenced records.
   Ex: "ivmast:H837:ABC"
   """
   @spec generate_keys(map, map | nil) :: [String.t] | []
@@ -68,27 +68,31 @@ defmodule DPS.Validator do
     DPS.ValidationCache.get(cache, keys)
   end
 
-  @spec validate_keys([tuple] | []) :: tuple | :valid
-  def validate_keys(keys) do
+  @spec validate_keys([tuple] | [], reference) :: tuple | :valid
+  def validate_keys(keys, cache) do
     Enum.find keys, :valid, fn(key) ->
-      check_key(key) == :error
+      check_key(key, cache) == :error
     end
   end
 
-  @spec check_key(tuple) :: :error | :valid
-  def check_key({key, nil}) do
-    case query_db(key) do
+  @spec check_key(tuple, reference) :: :error | :valid
+  def check_key({key, nil}, cache) do
+    case query_database(key) do
       nil    -> :error
       record ->
-        update_cache(key, record.timestamp)
+        # I don't like this side effect here
+        update_cache(cache, key, record.timestamp)
         :valid
     end
   end
-  def check_key(_tuple), do: :valid
+  def check_key(_tuple, _cache), do: :valid
 
-  def query_db(key) do
+  # @spec query_database(String.t)
+  def query_database(key) do
   end
 
-  def update_cache(key, timestamp) do
+  @spec update_cache(reference, String.t, any) :: true
+  def update_cache(cache, key, value) do
+    DPS.ValidationCache.set(cache, {key, value})
   end
 end
