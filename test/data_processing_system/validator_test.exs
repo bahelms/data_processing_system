@@ -26,7 +26,6 @@ defmodule DPS.ValidatorTest do
     references =
       %{"some_table"    => ["cajun_filet", "tea"],
         "another_table" => ["boberry", "coffee"]}
-
     keys =
       %{"table"       => "bojangle",
         "cajun_filet" => 3,

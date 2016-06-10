@@ -32,19 +32,41 @@ defmodule DPS.Validator do
   end
 
   def handle_call({:validate, data}, _from, state) do
-    data
-    |> generate_keys(state.config[data["table"]]["references"])
-    |> retrieve_keys(state.cache)
-    |> inspect
-    |> Logger.info
+    result =
+      data
+      |> generate_keys(state.config[data["table"]]["references"])
+      |> retrieve_keys(state.cache)
+      |> Enum.find(fn(kv_pair) -> validate_key(kv_pair) == :error end)
 
-    # if valid?
-    #   send data to transformer
-    # else
-    #   generate response
-    #   send to response topic
-    {:reply, nil, state}
+    case result do
+      nil ->
+        # send_to_transformer(data)
+        {:reply, :ok, state}
+      _   ->
+        {:reply, :error, state}
+    end
+
+    # Enum.map keys, fn(key, value) ->
+    #   if value == nil do
+    #     if record = sql_query(key) do
+    #       update_cache(key, record.timestamp)
+    #       key,value
+    #     else
+    #       :invalid
+    #     end
+    #   else
+    #     key,value
+    #   end
+    # end
   end
+
+  def validate_key({key, nil}) do
+    case check_db(key) do
+      nil    -> :error
+      record -> update_cache(key, record.timestamp)
+    end
+  end
+  def validate_key(tuple), do: tuple
 
   @doc """
   Generates a list of strings used to query the validation cache.

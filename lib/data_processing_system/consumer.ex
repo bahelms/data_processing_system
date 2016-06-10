@@ -3,8 +3,8 @@ defmodule DPS.Consumer do
 
   def start_link(topic) do
     {:ok, task} = Task.start_link(__MODULE__, :consume, [topic])
-    Logger.info "Consuming \"#{topic}\" topic."
-    {:ok, task}
+    # Logger.info "Consuming \"#{topic}\" topic."
+    # {:ok, task}
   end
 
   @spec consume(String.t) :: any
