@@ -32,13 +32,11 @@ defmodule DPS.Validator do
   end
 
   def handle_call({:validate, data}, _from, state) do
-    result =
-      data
-      |> generate_keys(state.config[data["table"]]["references"])
-      |> retrieve_keys(state.cache)
-      |> validate_keys(state.cache)
-
-    case result do
+    data
+    |> generate_keys(state.config[data["table"]]["references"])
+    |> retrieve_keys(state.cache)
+    |> validate_keys(state.cache)
+    |> case do
       :valid ->
         # send_to_transformer(data)
         {:reply, :ok, state}

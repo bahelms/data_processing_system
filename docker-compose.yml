@@ -2,3 +2,10 @@ version: '2'
 services:
   dps:
     build: .
+    command: mix start_app
+    links:
+      - postgres
+    volumes:
+      - .:/usr/src/app
+  postgres:
+    image: postgres

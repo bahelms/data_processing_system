@@ -14,8 +14,8 @@ defmodule DPS.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :poolboy, :timex, :yaml_elixir],
-     mod: {DPS, []}]
+    [mod: {DPS, []},
+     applications: [:ecto, :logger, :poolboy, :postgrex, :timex, :yaml_elixir]]
   end
 
   # Dependencies can be Hex packages:
@@ -28,8 +28,10 @@ defmodule DPS.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:poison, "2.1.0"},
+    [{:ecto, "2.0.0-rc.5"},
+     {:poison, "2.1.0"},
      {:poolboy, "1.5.1"},
+     {:postgrex, "0.11.1"},
      {:timex, "2.1.6"},
      {:yamerl, github: "yakaz/yamerl"},
      {:yaml_elixir, "1.2.0"}]
