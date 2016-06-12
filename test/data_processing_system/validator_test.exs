@@ -4,7 +4,7 @@ defmodule DPS.ValidatorTest do
 
   setup do
     context = %{
-      config: YamlElixir.read_from_file("config/validator_config.yml"),
+      config: YamlElixir.read_from_file("config/dps_config.yml"),
       sample_data: %{
         "table"          => "sycclass",
         "sccscl"         => "123",
@@ -17,27 +17,32 @@ defmodule DPS.ValidatorTest do
   end
 
   test "keys are generated when a table has references", context do
-    keys =
-      context.sample_data
-      |> DPS.Validator.generate_keys(context.config["sycclass"]["references"])
+    references = context.config["sycclass"]["references"]
+    mapping = context.config["sycclass"]["source_mapping"]
+    keys = DPS.Validator.generate_keys(context.sample_data, references, mapping)
     assert keys == ["sycgroup:02:ABC"]
   end
 
   test "generating keys with no references returns an empty list" do
-    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil) == []
+    assert DPS.Validator.generate_keys(%{"table" => "some_table"}, nil, nil) == []
   end
 
   test "keys can be generated with arbitrary references" do
     references =
       %{"some_table"    => ["cajun_filet", "tea"],
         "another_table" => ["boberry", "coffee"]}
+    mapping =
+      %{"cajun_filet" => "CF",
+        "tea"         => "TE",
+        "boberry"     => "BB",
+        "coffee"      => "CE"}
     keys =
-      %{"table"       => "bojangle",
-        "cajun_filet" => 3,
-        "boberry"     => "biscuit",
-        "tea"         => "sweet",
-        "coffee"      => "black"}
-      |> DPS.Validator.generate_keys(references)
+      %{"table" => "bojangle",
+        "CF"    => 3,
+        "BB"    => "biscuit",
+        "TE"    => "sweet",
+        "CE"    => "black"}
+      |> DPS.Validator.generate_keys(references, mapping)
       |> Enum.sort
     assert keys == ["another_table:biscuit:black", "some_table:3:sweet"]
   end
@@ -50,7 +55,7 @@ defmodule DPS.ValidatorTest do
     assert result == [{"sycgroup:123:ABC", :value}, {:bad_key, nil}]
   end
 
-  test "validating keys when all references exist", context do
+  test "validating keys when all references exist" do
     result =
       [{"key1", :value}, {"key2", :value}]
       |> DPS.Validator.validate_keys(nil)

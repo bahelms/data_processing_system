@@ -10,7 +10,8 @@ config :data_processing_system, DPS.Repo,
   database: "dps",
   username: "postgres",
   password: "postgres",
-  hostname: "postgres"
+  hostname: System.get_env("DB_HOSTNAME") || "localhost",
+  pool_size: 10
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
@@ -37,5 +38,5 @@ config :data_processing_system, DPS.Repo,
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-#     import_config "#{Mix.env}.exs"
+import_config "#{Mix.env}.exs"
 

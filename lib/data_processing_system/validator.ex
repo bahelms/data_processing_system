@@ -2,7 +2,7 @@ defmodule DPS.Validator do
   use GenServer
   require Logger
 
-  @validator_config "config/validator_config.yml"
+  @validator_config "config/dps_config.yml"
 
   ## Client ##
 
@@ -32,8 +32,10 @@ defmodule DPS.Validator do
   end
 
   def handle_call({:validate, data}, _from, state) do
+    config = state.config[data["table"]]
+
     data
-    |> generate_keys(state.config[data["table"]]["references"])
+    |> generate_keys(config["references"], config["source_mapping"])
     |> retrieve_keys(state.cache)
     |> validate_keys(state.cache)
     |> case do
@@ -50,13 +52,13 @@ defmodule DPS.Validator do
   Generates a list of strings used to query the validation cache.
   The keys use the following convention: "table_name:value1:value2:..."
   The values after the table_name represent the primary key of referenced records.
-  Ex: "ivmast:H837:ABC"
+  Ex: "items:H837:ABC"
   """
-  @spec generate_keys(map, map | nil) :: [String.t] | []
-  def generate_keys(_data, nil), do: []
-  def generate_keys(data, references) do
+  @spec generate_keys(map, map | nil, map) :: [String.t] | []
+  def generate_keys(_data, nil, _mapping), do: []
+  def generate_keys(data, references, mapping) do
     Enum.map references, fn({table, fields}) ->
-      [table | Enum.map(fields, fn(field) -> data[field] end)]
+      [table | Enum.map(fields, fn(field) -> data[mapping[field]] end)]
       |> Enum.join(":")
     end
   end

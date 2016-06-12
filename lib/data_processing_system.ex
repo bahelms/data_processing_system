@@ -5,7 +5,7 @@ defmodule DPS do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(DPS.ConsumerSupervisor, []),
+      # supervisor(DPS.ConsumerSupervisor, []),
       worker(DPS.Repo, [])
     ]
 
