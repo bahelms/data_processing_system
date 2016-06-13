@@ -15,3 +15,7 @@ Processes streaming data from a message broker.
   "scclds": "description",
   "scclst": "sort"
 }
+
+## TODO  
+* Add constraints to DB table creation (primary key, not null, foreign key)
+

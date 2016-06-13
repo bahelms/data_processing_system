@@ -1,15 +1,16 @@
 defmodule DB.Utils do
-  require Logger
+  @moduledoc """
+  General functions to aid database management
+  """
 
-  @config_file "config/dps_config.yml"
+  @type config :: %{String.t => String.t}
 
-  def create_tables do
-    Logger.info "Creating tables from #{@config_file}..."
-    YamlElixir.read_from_file(@config_file)
-    |> Enum.map(fn({source, config}) ->
+  @spec create_tables(config) :: any
+  def create_tables(config) do
+    Enum.map config, fn({source, config}) ->
       create_table_template(config)
       |> execute_query
-    end)
+    end
   end
 
   @spec execute_query(String.t, [String.t]) :: %Postgrex.Result{}
@@ -18,16 +19,16 @@ defmodule DB.Utils do
     result
   end
 
-  @spec generate_fields(%{String.t => String.t}) :: String.t
+  @spec generate_fields(config) :: String.t
   defp generate_fields(schema) do
     Enum.map(schema, fn({field, type}) -> "#{field} #{type}" end)
     |> Enum.concat(meta_fields)
     |> Enum.join(",")
   end
 
-  @spec create_table_template(%{String.t => String.t}) :: String.t
+  @spec create_table_template(config) :: String.t
   defp create_table_template(config) do
-    # Add constraints
+    # Add constraints (primary key, not null, foreign key)
     """
     CREATE TABLE IF NOT EXISTS #{config["table"]}
     (#{generate_fields(config["fields"])})

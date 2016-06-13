@@ -51,8 +51,8 @@ defmodule DPS.Validator do
   @doc """
   Generates a list of strings used to query the validation cache.
   The keys use the following convention: "table_name:value1:value2:..."
-  The values after the table_name represent the primary key of referenced records.
-  Ex: "items:H837:ABC"
+  The values after the table_name represent the primary key of that record.
+  Ex: "items:H837:ABC" -> item_number H837, division ABC
   """
   @spec generate_keys(map, map | nil, map) :: [String.t] | []
   def generate_keys(_data, nil, _mapping), do: []
@@ -87,7 +87,7 @@ defmodule DPS.Validator do
   end
   def check_key(_tuple, _cache), do: :valid
 
-  # @spec query_database(String.t)
+  @spec query_database(String.t) :: %Postgrex.Result{} | nil
   def query_database(key) do
   end
 
