@@ -1,13 +1,11 @@
-defmodule DB.Utils do
+defmodule DB do
   @moduledoc """
   General functions to aid database management
   """
 
-  @type config :: %{String.t => String.t}
-
-  @spec create_tables(config) :: any
+  @spec create_tables(DPS.config) :: any
   def create_tables(config) do
-    Enum.map config, fn({source, config}) ->
+    Enum.map config, fn({_source, config}) ->
       create_table_template(config)
       |> execute_query
     end
@@ -19,14 +17,14 @@ defmodule DB.Utils do
     result
   end
 
-  @spec generate_fields(config) :: String.t
+  @spec generate_fields(DPS.config) :: String.t
   defp generate_fields(schema) do
     Enum.map(schema, fn({field, type}) -> "#{field} #{type}" end)
     |> Enum.concat(meta_fields)
     |> Enum.join(",")
   end
 
-  @spec create_table_template(config) :: String.t
+  @spec create_table_template(DPS.config) :: String.t
   defp create_table_template(config) do
     # Add constraints (primary key, not null, foreign key)
     """

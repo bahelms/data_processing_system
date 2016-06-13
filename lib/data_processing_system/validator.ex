@@ -2,13 +2,11 @@ defmodule DPS.Validator do
   use GenServer
   require Logger
 
-  @validator_config "config/dps_config.yml"
-
   ## Client ##
 
-  @spec start_link(reference) :: {:ok, pid}
-  def start_link(cache) do
-    GenServer.start_link(__MODULE__, cache)
+  @spec start_link(reference, DPS.config) :: {:ok, pid}
+  def start_link(cache, config) do
+    GenServer.start_link(__MODULE__, {cache, config})
   end
 
   @doc """
@@ -24,11 +22,8 @@ defmodule DPS.Validator do
 
   ## Server ##
 
-  def init(cache) do
-    state =
-      %{config: YamlElixir.read_from_file(@validator_config),
-        cache:  cache}
-    {:ok, state}
+  def init({cache, config}) do
+    {:ok, %{config: config, cache: cache}}
   end
 
   def handle_call({:validate, data}, _from, state) do
@@ -89,6 +84,8 @@ defmodule DPS.Validator do
 
   @spec query_database(String.t) :: %Postgrex.Result{} | nil
   def query_database(key) do
+    # [table | pkey] = String.split(key, ":")
+    # "select * from #{table} where code = '#{}' and division = ''"
   end
 
   @spec update_cache(reference, String.t, any) :: true

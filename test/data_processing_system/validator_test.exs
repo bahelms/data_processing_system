@@ -84,8 +84,14 @@ defmodule DPS.ValidatorTest do
     assert Cache.get(context.cache, [:hey]) == [hey: timestamp]
   end
 
-  @tag :pending
-  test "query_database" do
+  test "querying the database with a cache key" do
+    "insert into customer_groups (code, division) values ('123','XYZ')"
+    |> DB.execute_query
+
+    result = DPS.Validator.query_database("customer_groups:123:XYZ")
+    DB.execute_query("truncate customer_groups")
+
+    assert result.num_rows == 1
   end
 
   test "updating the cache", %{cache: cache} do
@@ -97,12 +103,12 @@ defmodule DPS.ValidatorTest do
 
   test ":ok is returned when all dependencies exist", context do
     Cache.set(context.cache, [{"sycgroup:02:ABC", :os.timestamp}])
-    {:ok, pid} = DPS.Validator.start_link(context.cache)
+    {:ok, pid} = DPS.Validator.start_link(context.cache, context.config)
     assert DPS.Validator.process(pid, context.sample_data) == :ok
   end
 
   test ":error is returned when the message is invalid", context do
-    {:ok, pid} = DPS.Validator.start_link(context.cache)
+    {:ok, pid} = DPS.Validator.start_link(context.cache, context.config)
     assert DPS.Validator.process(pid, context.sample_data) == :error
   end
 end
