@@ -1,39 +1,21 @@
 sycclass:
-  topic: abc_sycclass
-  table: customer_classes
   fields:
-    code: text
-    division: text
-    description: text
-    customer_group_code: text
-    delete_code: text
-    sort: text
-  primary_key: [code, division]
+    sccscl: text
+    scclgp: text
+    scclds: text
+    scclst: text
+    scdlcd: text
+    record_catalog: text
+  primary_key: [sccscl, record_catalog]
   references:
-    sycgroup: [customer_group_code, division]
-  source_mapping:
-    code: sccscl
-    division: record_catalog
-    customer_group_code: scclgp
-    description: scclds
-    sort: scclst
-    delete_code: scdlcd
+    sycgroup: [scclgp, record_catalog]
 
 sycgroup:
-  topic: abc_sycgroup
-  table: customer_groups
-  fields:
-    code: text
-    division: text
-    description: text
-    delete_code: text
-  primary_key: [code, division]
+  fields: 
+    sgclgp: text
+    sggpds: text
+    sgclcd: text
+    record_catalog: text
+  primary_key: [sgclgp, record_catalog]
   references: null
-  source_mapping: 
-    code: sgclgp
-    division: record_catalog
-    description: sggpds
-    delete_code: sgdlcd
-
-
 

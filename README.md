@@ -5,7 +5,7 @@ Processes streaming data from a message broker.
 #### Message Example -- JSON   
 
 {
-  "table": "sycclass",
+  "message_type": "sycclass",
   "record_identity": "uuid",
   "record_timestamp": "...",
   "record_mode": "insert",

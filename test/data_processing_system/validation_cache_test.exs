@@ -11,20 +11,9 @@ defmodule DPS.ValidationCacheTest do
     assert Cache.set(cache, {"some_key", "some_value"}) == true
   end
 
-  test "setting multiple keys as list of tuples returns true", %{cache: cache} do
-    result = Cache.set(cache, [{"ivmast:34:ABC", Time.now}, {"hey!", Time.now}])
-    assert result == true
-  end
-
-  test "retrieving keys returns a list of tuples", %{cache: cache} do
+  test "retrieving key returns a list of one tuples", %{cache: cache} do
     Cache.set(cache, [key1: :value1, key2: :value2])
-    assert Cache.get(cache, [:key1]) == [key1: :value1]
-    assert Cache.get(cache, [:key1, :key2]) == [key1: :value1, key2: :value2]
-    assert Cache.get(cache, ["no_key1", "no_key2"]) ==
-      [{"no_key1", nil}, {"no_key2", nil}]
-  end
-
-  test "retrieving keys returns an empty list when given an empty list", context do
-    assert Cache.get(context.cache, []) == []
+    assert Cache.get(cache, :key1) == {:key1, :value1}
+    assert Cache.get(cache, "no_key1") == {"no_key1", nil}
   end
 end

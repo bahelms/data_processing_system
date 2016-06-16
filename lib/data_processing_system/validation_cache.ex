@@ -18,23 +18,21 @@ defmodule DPS.ValidationCache do
   end
 
   @doc """
-  Inserts either one tuple or a list of tuples into the cache table.
+  Inserts one key/value tuple into the cache table.
   """
-  @spec set(reference, tuple | [tuple]) :: true
-  def set(cache, entries) do
-    :ets.insert(cache, entries)
+  @spec set(reference, tuple) :: true
+  def set(cache, entry) do
+    :ets.insert(cache, entry)
   end
 
   @doc """
-  Retrieves a list of key/value tuples corresponding to the given keys
+  Retrieves a list of one key/value tuple corresponding to the given key
   """
-  @spec get(reference, [String.t] | []) :: [tuple] | []
-  def get(cache, keys) do
-    Enum.map keys, fn(key) ->
-      case :ets.lookup(cache, key) do
-        [tuple] -> tuple
-        []      -> {key, nil}
-      end
+  @spec get(reference, String.t) :: tuple
+  def get(cache, key) do
+    case :ets.lookup(cache, key) do
+      [tuple] -> tuple
+      []      -> {key, nil}
     end
   end
 end

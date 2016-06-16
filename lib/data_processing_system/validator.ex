@@ -4,7 +4,7 @@ defmodule DPS.Validator do
 
   ## Client ##
 
-  @spec start_link(reference, DPS.config) :: {:ok, pid}
+  @spec start_link(reference, map) :: {:ok, pid}
   def start_link(cache, config) do
     GenServer.start_link(__MODULE__, {cache, config})
   end
@@ -16,8 +16,8 @@ defmodule DPS.Validator do
   of the message.
   """
   @spec process(pid, map) :: :ok
-  def process(pid, data) do
-    GenServer.call(pid, {:validate, data})
+  def process(pid, message) do
+    GenServer.call(pid, {:validate, message})
   end
 
   ## Server ##
@@ -26,66 +26,73 @@ defmodule DPS.Validator do
     {:ok, %{config: config, cache: cache}}
   end
 
-  def handle_call({:validate, data}, _from, state) do
-    config = state.config[data["table"]]
+  def handle_call({:validate, message}, _from, state) do
+    config = state.config[message["message_type"]]
 
-    data
-    |> generate_keys(config["references"], config["source_mapping"])
-    |> retrieve_keys(state.cache)
-    |> validate_keys(state.cache)
-    |> case do
-      :valid ->
-        # send_to_transformer(data)
-        {:reply, :ok, state}
-      _ ->
-        # return response code also
-        {:reply, :error, state}
-    end
+    message
+    |> generate_cache_keys(config["references"])
+    |> retrieve_cache_keys(state.cache)
+    # |> Enum.all?(fn
+    #   {key, nil} ->
+    #     case DB.execute_query(generate_sql(key)) do
+    #       nil    -> false
+    #       record ->
+    #         update_cache(state.cache, key, record.timestamp)
+    #         true
+    #     end
+    #   _ -> true
+    # end)
+    # |> case do
+    #   true  ->
+    #     # send_to_transformer(message)
+    #     {:reply, :ok, state}
+    #   false ->
+    #     # return response code also
+    #     {:reply, :error, state}
+    # end
   end
 
   @doc """
-  Generates a list of strings used to query the validation cache.
+  Generates a stream of strings used to query the validation cache.
   The keys use the following convention: "table_name:value1:value2:..."
   The values after the table_name represent the primary key of that record.
-  Ex: "items:H837:ABC" -> item_number H837, division ABC
+  Ex: "ivmast:H837:ABC" -> ivitem H837, record_catalog ABC
   """
-  @spec generate_keys(map, map | nil, map) :: [String.t] | []
-  def generate_keys(_data, nil, _mapping), do: []
-  def generate_keys(data, references, mapping) do
+  @spec generate_cache_keys(map, map | nil) :: [String.t] | []
+  def generate_cache_keys(_message, nil), do: []
+  def generate_cache_keys(message, references) do
     Enum.map references, fn({table, fields}) ->
-      [table | Enum.map(fields, fn(field) -> data[mapping[field]] end)]
+      [table | Enum.map(fields, fn(field) -> message[field] end)]
       |> Enum.join(":")
     end
   end
 
-  @spec retrieve_keys([String.t] | [], reference) :: [tuple] | []
-  def retrieve_keys(keys, cache) do
-    DPS.ValidationCache.get(cache, keys)
-  end
-
-  @spec validate_keys([tuple] | [], reference) :: tuple | :valid
-  def validate_keys(keys, cache) do
-    Enum.find keys, :valid, fn(key) ->
-      check_key(key, cache) == :error
+  @spec retrieve_cache_keys(Stream.t | [], reference) :: Stream.t
+  def retrieve_cache_keys(keys, cache) do
+    Stream.map keys, fn(key) ->
+      DPS.ValidationCache.get(cache, key)
     end
   end
 
-  @spec check_key(tuple, reference) :: :error | :valid
-  def check_key({key, nil}, cache) do
-    case query_database(key) do
-      nil    -> :error
-      record ->
-        # I don't like this side effect here
-        update_cache(cache, key, record.timestamp)
-        :valid
-    end
+  def query_database_for_key(cache_key, config) do
+    [table | values] = String.split(cache_key, ":")
+    config[table]["primary_key"]
+    |> Enum.map(&(String.to_atom/1))
+    |> Enum.zip(values)
+    # DB.select_where(table, sgclgp: '123', record_catalog: 'ABC')
   end
-  def check_key(_tuple, _cache), do: :valid
 
-  @spec query_database(String.t) :: %Postgrex.Result{} | nil
-  def query_database(key) do
-    # [table | pkey] = String.split(key, ":")
-    # "select * from #{table} where code = '#{}' and division = ''"
+  def generate_sql(cache_key, config) do
+    [table | values] = String.split(cache_key, ":")
+    fields = config
+    "select * from #{table} where #{fields_match_values(fields, values)}"
+    |> IO.inspect
+  end
+
+  def fields_match_values(fields, values) do
+    Enum.zip(fields, values)
+    |> Enum.map(fn({field, value}) -> "#{field} = '#{value}'" end)
+    |> Enum.join(" and ")
   end
 
   @spec update_cache(reference, String.t, any) :: true
