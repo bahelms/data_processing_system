@@ -32,6 +32,7 @@ defmodule DPS.Validator do
     message
     |> generate_cache_keys(config["references"])
     |> retrieve_cache_keys(state.cache)
+
     # |> Enum.all?(fn
     #   {key, nil} ->
     #     case DB.execute_query(generate_sql(key)) do
@@ -76,23 +77,11 @@ defmodule DPS.Validator do
 
   def query_database_for_key(cache_key, config) do
     [table | values] = String.split(cache_key, ":")
-    config[table]["primary_key"]
-    |> Enum.map(&(String.to_atom/1))
-    |> Enum.zip(values)
-    # DB.select_where(table, sgclgp: '123', record_catalog: 'ABC')
-  end
-
-  def generate_sql(cache_key, config) do
-    [table | values] = String.split(cache_key, ":")
-    fields = config
-    "select * from #{table} where #{fields_match_values(fields, values)}"
-    |> IO.inspect
-  end
-
-  def fields_match_values(fields, values) do
-    Enum.zip(fields, values)
-    |> Enum.map(fn({field, value}) -> "#{field} = '#{value}'" end)
-    |> Enum.join(" and ")
+    where_constraints =
+      config[table]["primary_key"]
+      |> Enum.map(&(String.to_atom/1))
+      |> Enum.zip(values)
+    DB.select_all(table, where_constraints)
   end
 
   @spec update_cache(reference, String.t, any) :: true

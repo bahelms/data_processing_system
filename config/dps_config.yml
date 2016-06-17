@@ -1,4 +1,5 @@
 sycclass:
+  table: sycclass
   fields:
     sccscl: text
     scclgp: text
@@ -11,6 +12,7 @@ sycclass:
     sycgroup: [scclgp, record_catalog]
 
 sycgroup:
+  table: sycgroup
   fields: 
     sgclgp: text
     sggpds: text

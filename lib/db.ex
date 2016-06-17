@@ -3,6 +3,11 @@ defmodule DB do
   General functions to aid database management
   """
 
+  def select_all(table, options \\ []) do
+    "select * from #{table} where #{where_clause(options)}"
+    |> DB.execute_query
+  end
+
   @spec create_tables(DPS.config) :: any
   def create_tables(config) do
     Enum.map config, fn({_source, config}) ->
@@ -15,6 +20,12 @@ defmodule DB do
   def execute_query(query, args \\ []) do
     {:ok, result} = Ecto.Adapters.SQL.query(DPS.Repo, query, args)
     result
+  end
+
+  defp where_clause(options) do
+    options
+    |> Enum.map(fn({field, value}) -> "#{field} = '#{value}'" end)
+    |> Enum.join(" and ")
   end
 
   @spec generate_fields(DPS.config) :: String.t

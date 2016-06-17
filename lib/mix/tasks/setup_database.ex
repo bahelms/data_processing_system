@@ -6,8 +6,10 @@ defmodule Mix.Tasks.SetupDatabase do
 
   def run(_) do
     Application.ensure_all_started(:data_processing_system)
+    config = YamlElixir.read_from_file(@config_file)
+
     Mix.shell.info "Creating tables from #{@config_file}..."
-    YamlElixir.read_from_file(@config_file)
-    |> DB.create_tables
+    DB.create_schemas(config)
+    DB.create_tables(config)
   end
 end

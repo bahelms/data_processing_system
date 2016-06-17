@@ -3,6 +3,7 @@ defmodule DPS.ValidatorTest do
   alias DPS.ValidationCache, as: Cache
 
   setup do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(DPS.Repo)
     context = %{
       config: YamlElixir.read_from_file("config/dps_config.yml"),
       cache:  Cache.new_table(:cache),
@@ -31,7 +32,7 @@ defmodule DPS.ValidatorTest do
 
   ## unit tests ##
 
-  test "keys are generated when a table has references",
+  test "generating keys when a table has references",
     %{config: conf, sample_message: msg} do
     keys = DPS.Validator.generate_cache_keys(msg, conf["sycclass"]["references"])
     assert keys == ["sycgroup:02:ABC"]
@@ -42,7 +43,7 @@ defmodule DPS.ValidatorTest do
     assert keys == []
   end
 
-  test "keys can be generated with arbitrary references" do
+  test "generating keys with arbitrary references" do
     references =
       %{"some_table"    => ["cajun_filet", "tea"],
         "another_table" => ["boberry", "coffee"]}
@@ -66,11 +67,11 @@ defmodule DPS.ValidatorTest do
     assert result == [{"customer_groups:123:ABC", :value}, {:bad_key, nil}]
   end
 
-  test "generating SQL to double check dependency in database" do
-    sql = DPS.Validator.generate_sql("customer_groups:123:TCI")
-    assert sql == """
-      select * from customer_groups where code = '123' and division = 'TCI'
-    """
+  test "querying database with a cache key", context do
+    result =
+      "sycclass:123:TCI"
+      |> DPS.Validator.query_database_for_key(context.config)
+    assert result == %Postgrex.Result{}
   end
 
   # test "querying the database with a cache key", context do
