@@ -3,6 +3,7 @@ defmodule DB do
   General functions to aid database management
   """
 
+  @spec select_all(String.t, [{atom, String.t}]) :: [map] | []
   def select_all(table, options \\ []) do
     "select * from #{table} where #{where_clause(options)}"
     |> DB.execute_query

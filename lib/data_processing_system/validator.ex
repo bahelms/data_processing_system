@@ -32,25 +32,15 @@ defmodule DPS.Validator do
     message
     |> generate_cache_keys(config["references"])
     |> retrieve_cache_keys(state.cache)
-
-    # |> Enum.all?(fn
-    #   {key, nil} ->
-    #     case DB.execute_query(generate_sql(key)) do
-    #       nil    -> false
-    #       record ->
-    #         update_cache(state.cache, key, record.timestamp)
-    #         true
-    #     end
-    #   _ -> true
-    # end)
-    # |> case do
-    #   true  ->
-    #     # send_to_transformer(message)
-    #     {:reply, :ok, state}
-    #   false ->
-    #     # return response code also
-    #     {:reply, :error, state}
-    # end
+    |> validate_cache_results(state.cache, state.config)
+    |> case do
+      true  ->
+        # send_to_transformer(message)
+        {:reply, :valid, state}
+      false ->
+        # return response code also
+        {:reply, :invalid, state}
+    end
   end
 
   @doc """
@@ -68,13 +58,30 @@ defmodule DPS.Validator do
     end
   end
 
-  @spec retrieve_cache_keys([String.t] | [], reference) :: []
+  @spec retrieve_cache_keys([String.t] | [], reference) :: [tuple] | []
   def retrieve_cache_keys(keys, cache) do
     Enum.map keys, fn(key) ->
       DPS.ValidationCache.get(cache, key)
     end
   end
 
+  @spec validate_cache_results([tuple], reference, map) :: boolean
+  def validate_cache_results(results, cache, config) do
+    Enum.all? results, fn
+      {key, nil} -> self_healing_cache_check(cache, key, config)
+      _          -> true
+    end
+  end
+
+  @spec self_healing_cache_check(reference, String.t, map) :: boolean
+  def self_healing_cache_check(cache, key, config) do
+    case query_database_for_key(key, config) do
+      []       -> false
+      [record] -> update_cache(cache, key, record.record_timestamp)
+    end
+  end
+
+  @spec query_database_for_key(String.t, map) :: map | nil
   def query_database_for_key(cache_key, config) do
     [table | values] = String.split(cache_key, ":")
     where_constraints =

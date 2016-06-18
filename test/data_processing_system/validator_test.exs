@@ -1,17 +1,19 @@
 defmodule DPS.ValidatorTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   alias DPS.ValidationCache, as: Cache
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(DPS.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(DPS.Repo, {:shared, self})
     context = %{
       config: YamlElixir.read_from_file("config/dps_config.yml"),
       cache:  Cache.new_table(:cache),
       sample_message: %{
-        "message_type"   => "sycclass",
-        "sccscl"         => "123",
-        "scclgp"         => "02",
-        "record_catalog" => "ABC"
+        "message_type"     => "sycclass",
+        "sccscl"           => "123",
+        "scclgp"           => "02",
+        "record_catalog"   => "ABC",
+        "record_timestamp" => "2015-10-23T14:17:46.339713"
       }
     }
     {:ok, context}
@@ -19,15 +21,15 @@ defmodule DPS.ValidatorTest do
 
   ## process/2 - validation acceptance ##
 
-  test ":ok is returned when all dependencies exist", context do
+  test ":valid is returned when all dependencies exist", context do
     Cache.set(context.cache, [{"sycgroup:02:ABC", :os.timestamp}])
     {:ok, pid} = DPS.Validator.start_link(context.cache, context.config)
-    assert DPS.Validator.process(pid, context.sample_message) == :ok
+    assert DPS.Validator.process(pid, context.sample_message) == :valid
   end
 
-  test ":error is returned when the message is invalid", context do
+  test ":invalid is returned when the message is invalid", context do
     {:ok, pid} = DPS.Validator.start_link(context.cache, context.config)
-    assert DPS.Validator.process(pid, context.sample_message) == :error
+    assert DPS.Validator.process(pid, context.sample_message) == :invalid
   end
 
   ## unit tests ##
@@ -79,6 +81,19 @@ defmodule DPS.ValidatorTest do
       |> DPS.Validator.query_database_for_key(context.config)
       |> List.first
     assert result.record_timestamp == "2015-10-23T14:17:46.339713"
+  end
+
+  test "cache is updated if dependency exists in database", context do
+    """
+    insert into sycgroup (sgclgp, record_catalog, record_timestamp)
+    values ('884', 'XYZ', '2015-10-23T14:17:46.339713')
+    """
+    |> DB.execute_query
+
+    key = "sycgroup:884:XYZ"
+    assert DPS.Validator.self_healing_cache_check(context.cache, key, context.config)
+    assert DPS.ValidationCache.get(context.cache, key) ==
+      {"sycgroup:884:XYZ", "2015-10-23T14:17:46.339713"}
   end
 
   test "updating the cache", %{cache: cache} do

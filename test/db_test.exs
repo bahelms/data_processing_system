@@ -21,7 +21,9 @@ defmodule DBTest do
     "insert into sycclass (sccscl, record_catalog) values ('123', 'ABC')"
     |> DB.execute_query
 
-    res = DB.select_all("sycclass", sccscl: '123', record_catalog: 'ABC')
-    assert res.num_rows == 1
+    [rec1] = DB.select_all("sycclass", sccscl: '123', record_catalog: 'ABC')
+    rec2   = DB.select_all("sycclass", sccscl: 'N/A', record_catalog: 'ABC')
+    assert rec1.sccscl == "123"
+    assert rec2 == []
   end
 end

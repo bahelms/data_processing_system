@@ -6,7 +6,7 @@ defmodule DB.Result do
   @doc """
   Converts a %Postgrex.Result{} into a map
   """
-  @spec convert(%Postgrex.Result{}) :: [%{String.t => String.t}]
+  @spec convert(%Postgrex.Result{}) :: [%{String.t => String.t}] | []
   def convert(result) do
     Enum.map result.rows, fn(row) ->
       result.columns
