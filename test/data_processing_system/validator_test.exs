@@ -68,22 +68,18 @@ defmodule DPS.ValidatorTest do
   end
 
   test "querying database with a cache key", context do
+    """
+    insert into sycclass (sccscl, record_catalog, record_timestamp)
+    values ('123', 'TCI', '2015-10-23T14:17:46.339713')
+    """
+    |> DB.execute_query
+
     result =
       "sycclass:123:TCI"
       |> DPS.Validator.query_database_for_key(context.config)
-    assert result == %Postgrex.Result{}
+      |> List.first
+    assert result.record_timestamp == "2015-10-23T14:17:46.339713"
   end
-
-  # test "querying the database with a cache key", context do
-  #   "insert into customer_groups (code, division) values ('123','XYZ')"
-  #   |> DB.execute_query
-
-  #   config = context.config[context.sample_message["table"]]
-  #   result = DPS.Validator.query_database("sycgroup:123:XYZ", config)
-  #   DB.execute_query("truncate customer_groups")
-
-  #   assert result.num_rows == 1
-  # end
 
   test "updating the cache", %{cache: cache} do
     assert DPS.Validator.update_cache(cache, :whats, :up?) == true

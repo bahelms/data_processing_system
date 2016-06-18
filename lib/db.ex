@@ -6,6 +6,7 @@ defmodule DB do
   def select_all(table, options \\ []) do
     "select * from #{table} where #{where_clause(options)}"
     |> DB.execute_query
+    |> DB.Result.convert
   end
 
   @spec create_tables(DPS.config) :: any

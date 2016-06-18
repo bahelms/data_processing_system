@@ -68,9 +68,9 @@ defmodule DPS.Validator do
     end
   end
 
-  @spec retrieve_cache_keys(Stream.t | [], reference) :: Stream.t
+  @spec retrieve_cache_keys([String.t] | [], reference) :: []
   def retrieve_cache_keys(keys, cache) do
-    Stream.map keys, fn(key) ->
+    Enum.map keys, fn(key) ->
       DPS.ValidationCache.get(cache, key)
     end
   end

@@ -7,6 +7,7 @@ sycclass:
     scclst: text
     scdlcd: text
     record_catalog: text
+    record_timestamp: text
   primary_key: [sccscl, record_catalog]
   references:
     sycgroup: [scclgp, record_catalog]
@@ -18,6 +19,7 @@ sycgroup:
     sggpds: text
     sgclcd: text
     record_catalog: text
+    record_timestamp: text
   primary_key: [sgclgp, record_catalog]
   references: null
 
