@@ -13,14 +13,14 @@ defmodule DB.ResultTest do
 
   test "converting a postgrex result", %{result: result} do
     expected_results = [
-      %{"scclgp" => "02",
-        "sccscl" => "123",
-        "scdlcd" => nil,
-        "id"     => "id123"},
-      %{"scclgp" => "03",
-        "sccscl" => "124",
-        "scdlcd" => "D",
-        "id"     => "id124"},
+      %{scclgp: "02",
+        sccscl: "123",
+        scdlcd: nil,
+        id:     "id123"},
+      %{scclgp: "03",
+        sccscl: "124",
+        scdlcd: "D",
+        id:     "id124"},
     ]
     assert DB.Result.convert(result) == expected_results
   end

@@ -15,7 +15,7 @@ defmodule DPS.Validator do
   fields are present, and whether all dependencies exist for successful processing
   of the message.
   """
-  @spec process(pid, map) :: :ok
+  @spec process(pid, %{String.t => String.t}) :: :ok
   def process(pid, message) do
     GenServer.call(pid, {:validate, message})
   end
@@ -26,6 +26,7 @@ defmodule DPS.Validator do
     {:ok, %{config: config, cache: cache}}
   end
 
+  @spec handle_call({:validate, map}, reference, map) :: tuple
   def handle_call({:validate, message}, _from, state) do
     config = state.config[message["message_type"]]
 
@@ -35,7 +36,7 @@ defmodule DPS.Validator do
     |> validate_cache_results(state.cache, state.config)
     |> case do
       true  ->
-        # send_to_transformer(message)
+        # DPS.Transformer.process(message, state.config)
         {:reply, :valid, state}
       false ->
         # return response code also
