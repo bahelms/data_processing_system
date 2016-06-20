@@ -1,25 +1,56 @@
 sycclass:
   table: sycclass
   fields:
-    sccscl: text
-    scclgp: text
-    scclds: text
-    scclst: text
-    scdlcd: text
-    record_catalog: text
-    record_timestamp: text
+    sccscl: 
+      type: text
+    scclgp: 
+      type: text
+    scclds:
+      type: text
+    scclst:
+      type: text
+    scdlcd:
+      type: text
+    record_catalog:
+      type: text
+    record_timestamp:
+      type: text
   primary_key: [sccscl, record_catalog]
   references:
     sycgroup: [scclgp, record_catalog]
 
 sycgroup:
   table: sycgroup
+  public: customer_groups
   fields: 
-    sgclgp: text
-    sggpds: text
-    sgclcd: text
-    record_catalog: text
-    record_timestamp: text
+    sgclgp:
+      type: text
+    sggpds:
+      type: text
+    sgclcd:
+      type: text
+    record_catalog:
+      type: text
+    record_timestamp:
+      type: text
   primary_key: [sgclgp, record_catalog]
+  references: null
+
+customer_groups:
+  table: customer_groups
+  fields:
+    code: 
+      type: text
+      source: sgclgp
+    division: 
+      type: text
+      source: record_catalog
+    description: 
+      type: text
+      source: sggpds
+    delete_code: 
+      type: text
+      source: sgclcd
+  primary_key: [code, division]
   references: null
 

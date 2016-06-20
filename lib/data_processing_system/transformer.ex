@@ -6,16 +6,17 @@ defmodule DPS.Transformer do
   transform and map the message into its public version.
   """
 
-  @spec process(%{String.t => String.t}, map) :: any
+  @spec process(%{String.t => String.t}, map) :: {:ok, pid}
   def process(message, config) do
     DPS.TransformerSupervisor
     |> Task.Supervisor.start_child(__MODULE__, :handle_message, [message, config])
   end
 
+  @spec handle_message(%{String.t => String.t}, map) :: any
   def handle_message(message, config) do
-    extract_source_data(message, config)
-    # transform message to public
-    # persist source and public in transaction
+    source = extract_source_data(message, config)
+    public = transform(message, config)
+    # DPS.Persister.process(source, public)
   end
 
   @doc """
@@ -31,6 +32,18 @@ defmodule DPS.Transformer do
 
   @spec transform(map, map) :: %{String.t => String.t}
   def transform(message, config) do
+    public = config[config[message["message_type"]]["public"]]
+    Enum.reduce public["fields"], %{}, fn({field, options}, public_data) ->
+      Map.put(public_data, field, sanitize(message[options["source"]]))
+    end
+  end
+
+  @spec sanitize(String.t) :: %{String.t => String.t}
+  def sanitize(value) do
+    case String.strip(value) do
+      ""       -> nil
+      stripped -> stripped
+    end
   end
 
   @spec add_field({String.t, String.t}, map, boolean) :: map

@@ -32,7 +32,7 @@ defmodule DB do
 
   @spec generate_fields(DPS.config) :: String.t
   defp generate_fields(schema) do
-    Enum.map(schema, fn({field, type}) -> "#{field} #{type}" end)
+    Enum.map(schema, fn({field, options}) -> "#{field} #{options["type"]}" end)
     |> Enum.concat(meta_fields)
     |> Enum.join(",")
   end
