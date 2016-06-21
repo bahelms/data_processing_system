@@ -36,10 +36,9 @@ defmodule DPS.Validator do
     |> validate_cache_results(state.cache, state.config)
     |> case do
       true  ->
-        # DPS.Transformer.process(message, state.config)
+        DPS.Transformer.process(message, state.config)
         {:reply, :valid, state}
       false ->
-        # return response code also
         {:reply, :invalid, state}
     end
   end

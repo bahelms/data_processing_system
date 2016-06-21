@@ -51,7 +51,7 @@ defmodule DPS.TransformerTest do
 
     result =
       context.sycgroup_message
-      |> DPS.Transformer.transform(context.config)
+      |> DPS.Transformer.transform(context.config["customer_groups"])
     assert result == expected_data
   end
 

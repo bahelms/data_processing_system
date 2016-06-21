@@ -14,9 +14,14 @@ defmodule DPS.Transformer do
 
   @spec handle_message(%{String.t => String.t}, map) :: any
   def handle_message(message, config) do
-    source = extract_source_data(message, config)
-    public = transform(message, config)
-    # DPS.Persister.process(source, public)
+    msg_type     = message["message_type"]
+    source_table = config[msg_type]["table"]
+    public_table = config[msg_type]["public"]
+
+    DPS.Persister.process(
+      {source_table, extract_source_data(message, config)},
+      {public_table, transform(message, config[public_table])}
+    )
   end
 
   @doc """
@@ -32,8 +37,7 @@ defmodule DPS.Transformer do
 
   @spec transform(map, map) :: %{String.t => String.t}
   def transform(message, config) do
-    public = config[config[message["message_type"]]["public"]]
-    Enum.reduce public["fields"], %{}, fn({field, options}, public_data) ->
+    Enum.reduce config["fields"], %{}, fn({field, options}, public_data) ->
       Map.put(public_data, field, sanitize(message[options["source"]]))
     end
   end

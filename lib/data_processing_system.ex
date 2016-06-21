@@ -11,6 +11,8 @@ defmodule DPS do
 
     children = [
       supervisor(DPS.ValidatorSupervisor, [config]),
+      supervisor(Task.Supervisor, [[name: DPS.TransformerSupervisor]], id: 1),
+      supervisor(Task.Supervisor, [[name: DPS.PersisterSupervisor]], id: 2),
       worker(DPS.Repo, [])
     ]
 

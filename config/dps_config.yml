@@ -1,5 +1,6 @@
 sycclass:
   table: sycclass
+  public: customer_classes
   fields:
     sccscl: 
       type: text
@@ -27,7 +28,7 @@ sycgroup:
       type: text
     sggpds:
       type: text
-    sgclcd:
+    sgdlcd:
       type: text
     record_catalog:
       type: text
@@ -50,7 +51,7 @@ customer_groups:
       source: sggpds
     delete_code: 
       type: text
-      source: sgclcd
+      source: sgdlcd
   primary_key: [code, division]
   references: null
 
